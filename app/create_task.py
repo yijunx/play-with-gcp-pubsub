@@ -28,7 +28,11 @@ def publish(publisher: pubsub_v1.PublisherClient, config: Settings):
         "y": True,
         "z": None
     }
-    future = publisher.publish(topic_name, json.dumps(tasks).encode(), spam='eggs')
+    future = publisher.publish(
+        topic_name,
+        json.dumps(tasks).encode(),
+        user_id='fakeuserid1'
+    )
     future.result()
 
 

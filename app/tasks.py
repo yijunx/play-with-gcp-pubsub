@@ -26,6 +26,7 @@ def do_tasks(subclient: pubsub_v1.SubscriberClient, config: Settings):
         # print(message.data)
 
         t = json.loads(message.data)
+        # print(message.attributes)  # -> {'spam': 'eggs'}
         SlowHandler().handle(task=t)
         # print(type(message))
         message.ack()
