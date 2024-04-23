@@ -50,6 +50,8 @@ if __name__ == "__main__":
                 print(t)
                 # ws.send(str(t)) or json.dumps(t)
                 message.ack()
+            else:
+                message.nack()
         return callback
 
     r = PubSubReceiver(config=config)

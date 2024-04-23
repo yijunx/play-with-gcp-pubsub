@@ -71,10 +71,26 @@ https://cloud.google.com/python/docs/reference/pubsub/latest
                 print(t)
                 # ws.send(str(t)) or json.dumps(t)
                 message.ack()
+            else:
+                message.nack()
         return callback
 
     r = PubSubReceiver(config=config)
     r.start(callback=create_callback(user_id="fakeuserid1"))
+    ```
+
+    however, this is not good. suppose there are 100 users online, all of them are subsribers of one subsription! the message will keep get `nack()` until gcp pubsub ships it to the right guy. in fact we will need a lot more subscriptions, each with a attribute filter like `f"attributes.user_id_mod_100=some_integer"` . then we will have way less subsribers to one subscriptions but way more subscriptions. According to google, the upper limit is 10000 subsriptions to a topic. to scale it more, we can each scale on the topic. according to google, there can be up to 10000 topic per project. the performance will be much better, (still with the help of `message.nack()`). However here I am not sure if this is the best way to ship messages to a target user. 
+
+    Thus with the double 10000, the backend publisher just needs to find the right topic to the send to. and the subsriber will need to find the right subsription. here is a way, suppose your userid is a uuid4. we can use below function to find the topic and attributes. the below code should work pretty well with 1M users.
+    ```
+    # user_id = str(uuid.uuid4())
+    def get_topic_and_sub(user_id: str, total_topic: int = 1000, total_sub: int = 1000):
+        u = uuid.UUID(user_id).int
+        print(u)
+        s = u % total_sub
+        u = (u - s) // total_sub
+        t = u % total_topic
+        return f"chat-topic-{t}", f"chat-sub-{s}"
     ```
 
 * how to package this together with celery + redis|rmq for task queue
